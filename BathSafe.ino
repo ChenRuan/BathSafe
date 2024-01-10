@@ -28,12 +28,13 @@ int PIRMotionCount;
 
 DHT dht(DHTPin, DHTTYPE);   // Initialize DHT sensor.
 
-// 白绿蓝粉黄橙紫红
-int RArray[8] = {255, 170,  85,   0, 125, 250, 253, 255}; // 替换这里的数值
-int GArray[8] = {239, 231, 224, 216, 176, 135,  68,   0}; // 替换这里的数值
-int BArray[8] = {  0,  85, 170, 255, 255, 255, 128,   0}; // 替换这里的数值
+// Color of the LED strips
+// white, green, blue, pink, yellow, orange, purple, red
+int RArray[8] = {255, 170,  85,   0, 125, 250, 253, 255}; 
+int GArray[8] = {239, 231, 224, 216, 176, 135,  68,   0}; 
+int BArray[8] = {  0,  85, 170, 255, 255, 255, 128,   0}; 
 
-float DangerTemperature = 40.0;
+float DangerTemperature = 45.0;
 float DangerHumidity = 80;
 
 Adafruit_NeoPixel pixels1(8, LEDStrip1Pin);
@@ -184,12 +185,15 @@ void SendWarningMessage(int MessageMode){
   BOTinfo += "\nTemperature: " + String(Temperature);
   BOTinfo += "\nHumidity: " + String(Humidity);
   BOTinfo += "\nWarning Reason: ";
+  // High temp and hum for too long 
   if (MessageMode == 0){
     BOTinfo += "Bath time in high temperature/humidity is TOO long! Please pay attention to the condition of who in the bathroom!";
   }
+  // No activity
   if (MessageMode == 1){
     BOTinfo += "No activity in the bathroom for a long time! Please enter the bathroom and check the situation!";
   }
+  // Button event
   if (MessageMode == 2){
     BOTinfo += "Emergency! Someone in the bathroom press the emergency button! Please check asap!";
   }
@@ -198,10 +202,14 @@ void SendWarningMessage(int MessageMode){
 
 void DataProcess(){
   delay(300);
+  // Read temperature and humidity
   Temperature = dht.readTemperature();
-  Humidity = dht.readHumidity(); // Gets the values of the humidity
+  Humidity = dht.readHumidity();
+  // map the data to the number of LEDs
   TempLEDStripsNumber = map(Temperature, StartTemperature, DangerTemperature, 1, 8);
   HumLEDStripsNumber = map(Humidity, StartHumidity, DangerHumidity, 1, 8);
+  LEDStripsDisplay(pixels1,TempLEDStripsNumber);
+  LEDStripsDisplay(pixels2,HumLEDStripsNumber);
   Serial.print("Temperature:");
   Serial.println(Temperature);
   Serial.print("LEDnumber:");
@@ -210,10 +218,10 @@ void DataProcess(){
   Serial.println(Humidity);
   Serial.print("LEDnumber:");
   Serial.println(HumLEDStripsNumber);
-  LEDStripsDisplay(pixels1,TempLEDStripsNumber);
-  LEDStripsDisplay(pixels2,HumLEDStripsNumber);
   PIRMotionJudge();
-  if(Temperature >= DangerTemperature or Humidity >= DangerHumidity){
+  // high heat index warning
+  float HeatIndex = 1.1 * (1.8 * Temperature + 32) + 0.047 * Humidity - 10.3 ;
+  if(Temperature >= DangerTemperature or Humidity >= DangerHumidity or HeatIndex >= 125){
     ReminderCount ++ ;
     if(ReminderCount >= 60){
       buzzerReminding();
@@ -238,6 +246,7 @@ void DataProcess(){
   Serial.println("-------------");
 }
 
+// Activitate the chosen LED strips and light up specific number of LEDs
 void LEDStripsDisplay(Adafruit_NeoPixel &pixels, int LEDnumber){
   pixels.clear();
   if(LEDnumber >= 1000){
