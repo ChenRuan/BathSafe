@@ -1,6 +1,6 @@
 # BathSafe
 ## Introduction
-The production is a multi-sensor device which can avoid the risks caused by high temperature and humidity during bathing,
+Bathing or showering in a bathroom with high temperature and humidity for a long time can lead to physical discomfort or even worse. This project mainly designed an online physical device to judge the safety of users in the bathroom by obtaining ambient temperature and humidity and capturing environmental actions. With these processed data, it can termly remind people who have been in the high-temperature and high-humidity bathroom for a long time, and send messages with detailed environment information and the alert reason to emergency contacts in case of emergency.
 
 ## Functions
 
@@ -34,12 +34,14 @@ The production is a multi-sensor device which can avoid the risks caused by high
 
 ## Hardware Installation Guide
 ### Circuit Diagram
-Connect the hardware according to the Circuit Diagram.
-![image](https://github.com/ChenRuan/BathSafe/assets/145383140/8d452b1f-f2b8-462e-a0aa-6742acee5927)
+Connect the hardware according to the Circuit Diagram. The connection between each component is shown in the figures, where red represents the live line, black represents the neutral line, yellow represents the input signal line, and blue represents the output signal line.
+![BathSafeSketch](https://github.com/ChenRuan/BathSafe/assets/145383140/f97106d6-d692-4701-866f-5ccb34bd4a84)
 
-![image](https://github.com/ChenRuan/BathSafe/assets/145383140/502d494e-ae0d-468b-bac7-ee0e2ce7c53a)
+![BathSafeSketch](https://github.com/ChenRuan/BathSafe/assets/145383140/ea6c965e-a232-4f7d-95b4-c231c4325566)
 
-### Packaging Production
+
+
+### Enclosure Design
 The packaging consists of six laser cut transparent plastic shell and one laser cut wooden board. 
 
 The tenon structure of the plastic plate is made of MakerCase[1], and the bottom of the box has no such structure, which make it easy to disassemble to change programs or replace batteries. The front hole is designed for button and the side one for switch. The two small holes at the bottom are used to exchange gas with the outside world while reducing splashing water into the box, which is used to ensure the normal operation of DHT22.
@@ -52,35 +54,155 @@ Multiple plastic sheets can be joined together to form a transparent box. To imp
 
 The wooden board is planned on the location of each component, and drilled so that the wire can pass through, so as to achieve the effect of isolating the front and back circuits to better protect the main circuit. After all the components are linked and soldered, the wooden board is fixed into plastic boxes and hot-glued.
 
-**!!! picture here !!!**
+![image](https://github.com/ChenRuan/BathSafe/assets/145383140/a4f774f9-d04f-4edc-8b4d-b0242cf9bc6a)
+
 
 ## Software Installation Guide
 
 Several libraries that are written to the program header need to be installed first
 
-首先，需要确保程序中所有库都已经被安装。
-然后，请在同一目录下创建名为secret.h的文件，内容为：
+First, make sure that all the libraries in the program are installed.
+Then, create a file named ```secret.h``` in the same directory with the following content:
 ```
 #define SECRET_SSID "YOUR_WIFI_NAME_HERE"
 #define SECRET_PASS "YOUR_WIFI_PASSWORD_HERE" 
 #define SECRET_CHATID "YOUR_TELEGRAM_ID_HERE"
 #define SECRET_BOTAPITOKEN "YOUR_TELEGRAM_BOT_API_TOKEN_HERE"
 ```
-其中telegram的id和bot api token内容可以从下文telegram模块中获取使用教程
+The telegram id and bot api token content can be obtained from the following telegram module.
 
-在这之后，将代码传输到ESP8266上运行。在成功连接Wifi后，灯带即会亮起，设备开始工作。
+After that, transfer the code to the ESP8266 and run. After successfully connecting to Wifi, the LED strips will light up and the device will start working.
 
-如果需要修改功能或者显示效果，可以参考以下特别的模块的详细介绍：
-
-### Data Process Module
-
-### Telegram Module
-
-### Colorful LED Strip Display Module
+If the function or display effect need to be modified, refer to the following special module details:
 
 ### PIR Motion Sensor Module
 
+This module uses the PIR Motion Sensor to obtain whether there are moving objects, and if there are, the PIRMotionCount is cleared to zero. This section in the project is to verify that the person in the bathroom is still active.
+```
+void PIRMotionJudge(){
+  PIRMotionSituation = digitalRead(PIRMotionPin);
+  Serial.print("PIR:");
+  Serial.println(PIRMotionSituation);
+  if (PIRMotionSituation == 0){
+    PIRMotionCount++;
+  }else{
+    PIRMotionCount = 0;
+  }
+}
+```
+
+### Button Detection
+
+In order to ensure the function of the button, the monitoring of the button must be carried out in real-time in loop(), and ensure that it can be regularly detected at a high frequency. After pressing the button, the device will contact the emergency contact directly.
+
+```
+void loop() {
+  StartTime = millis();
+  if (StartTime - PreviousTime >= 5000) {
+    PreviousTime = StartTime;
+    DataProcess();
+  }
+  buttonStatus = !digitalRead(buttonPin);
+  if (buttonStatus == 1){
+    BathWarning(2);
+    Serial.println("Danger!");
+  }
+  delay(100);
+}
+```
+
+### Data Process Module
+
+This module is used to acquire and process data, including temperature and humidity data from the DHT22 and environmental activity situation from the PIR Motion Sensor. Risk counts are performed based on different environmental data, and feedback is provided when theses count exceed a certain threshold, including lighting, buzzing, and sending messages to emergency contacts.
+
+```
+  // high heat index warning
+  float HeatIndex = 1.1 * (1.8 * Temperature + 32) + 0.047 * Humidity - 10.3 ;
+  if(Temperature >= DangerTemperature or Humidity >= DangerHumidity or HeatIndex >= 125){
+    ReminderCount ++ ;
+    if(ReminderCount >= 60){
+      buzzerReminding();
+      ReminderCount = 0;
+      DangerCount ++;
+      if (DangerCount >= 4){
+        BathWarning(0);
+      }else if(PIRMotionCount >= 60){
+        BathWarning(1);
+      }
+    }
+    digitalWrite(LEDREDPin, HIGH);
+  } else{
+    digitalWrite(LEDREDPin, LOW);
+  }
+```
+
+### Telegram Module
+
+Telegram模块主要参考这个网站，利用Telegram的机器人功能与订阅功能实现ESP8266与手机之间的信息交互。当需要发送紧急消息时，设备将会直接给特定的用户发送信息。信息的内容可以用以下函数自定义。 https://randomnerdtutorials.com/telegram-request-esp32-esp8266-nodemcu-sensor-readings/ 
+
+The Telegram module mainly refers to https://randomnerdtutorials.com/telegram-request-esp32-esp8266-nodemcu-sensor-readings/, and uses Telegram bots and subscription functions to realize information interaction between ESP8266 and mobile phones. When there is a need to send, the device will send the message directly to the specific user. The content of the message can be customized using the following function.
+```
+void SendWarningMessage(int MessageMode){
+  int numMinute = StartTime/60000;
+  int numSecond = StartTime/1000 - numMinute * 60; 
+  String BOTinfo = "Who in the bathroom may be in danger! Please check!";
+  BOTinfo += "\nBath time: " + String(numMinute) + ":" + String(numSecond);
+  BOTinfo += "\nTemperature: " + String(Temperature);
+  BOTinfo += "\nHumidity: " + String(Humidity);
+  BOTinfo += "\nWarning Reason: ";
+  // High temp and hum for too long 
+  if (MessageMode == 0){
+    BOTinfo += "Bath time in high temperature/humidity is TOO long! Please pay attention to the condition of who in the bathroom!";
+  }
+  // No activity
+  if (MessageMode == 1){
+    BOTinfo += "No activity in the bathroom for a long time! Please enter the bathroom and check the situation!";
+  }
+  // Button event
+  if (MessageMode == 2){
+    BOTinfo += "Emergency! Someone in the bathroom press the emergency button! Please check asap!";
+  }
+  bot.sendMessage(CHAT_ID, BOTinfo, ""); 
+}
+```
+
+### Colorful LED Strip Display Module
+
+This module is used to visualize temperature and humidity data in the form of the colorful light strips. The colors of the strips can be customized.
+
+```
+// Color of the LED strips
+// white, green, blue, pink, yellow, orange, purple, red
+int RArray[8] = {255, 170,  85,   0, 125, 250, 253, 255}; 
+int GArray[8] = {239, 231, 224, 216, 176, 135,  68,   0}; 
+int BArray[8] = {  0,  85, 170, 255, 255, 255, 128,   0}; 
+```
+
+```
+  //Trigger the following periodically
+  TempLEDStripsNumber = map(Temperature, StartTemperature, DangerTemperature, 1, 8);
+  HumLEDStripsNumber = map(Humidity, StartHumidity, DangerHumidity, 1, 8);
+  LEDStripsDisplay(pixels1,TempLEDStripsNumber);
+  LEDStripsDisplay(pixels2,HumLEDStripsNumber);
+```
+
+```
+void LEDStripsDisplay(Adafruit_NeoPixel &pixels, int LEDnumber){
+  pixels.clear();
+  if(LEDnumber >= 1000){
+    LEDnumber = 1;
+  }
+  int minNum = (LEDnumber < 8) ? LEDnumber : 8 ;
+  for(int i=0; i < minNum; i++) {
+    pixels.setPixelColor(i, RArray[i], GArray[i], BArray[i]);
+  }
+  pixels.show();
+}
+```
+
 ### Buzzer Module
+
+The buzzer is mainly used to alert the user, including a reminder when the shower is too long and feedback after pressing the emergency contact button.
 
 ## Instructions for Use
 
