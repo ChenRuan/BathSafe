@@ -135,6 +135,7 @@ This module is used to acquire and process data, including temperature and humid
 ### Telegram Module
 
 The Telegram module mainly refers to [2]https://randomnerdtutorials.com/telegram-request-esp32-esp8266-nodemcu-sensor-readings/, and uses Telegram bots and subscription functions to realize information interaction between ESP8266 and mobile phones. When there is a need to send, the device will send the message directly to the specific user. The content of the message can be customized using the following function.
+
 ```
 void SendWarningMessage(int MessageMode){
   int numMinute = StartTime/60000;
@@ -200,7 +201,7 @@ The buzzer is mainly used to alert the user, including a reminder when the showe
 
 ## Instructions for Use
 
-将设备安装到墙上，打开开关即可开启装置。等待装置连接wifi，连接完毕后即可开始进行温湿度的安全监测。设备将在紧急情况下自动发送紧急消息，按压按钮也可以手动发送紧急消息。
+Mount the device to the wall and turn on the device by turning on the switch. Wait for the device to connect to wifi, and start the safety monitoring of temperature and humidity after the connection is complete. The device will automatically send an emergency message in case of an emergency, or you can send an emergency message manually by pressing the button.
 
 ## Application Demonstration
 
@@ -222,7 +223,7 @@ If the application sends emergency messages, the Telegram app will receive like 
 
 ![image](https://github.com/ChenRuan/BathSafe/assets/145383140/f478f332-7233-4cfd-8706-afd688db9437)
 
-
 # References
 [1] MakerCase - https://en.makercase.com/
+
 [2] Telegram: Request ESP32/ESP8266 Sensor Readings (Arduino IDE) - https://randomnerdtutorials.com/telegram-request-esp32-esp8266-nodemcu-sensor-readings/
