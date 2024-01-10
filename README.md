@@ -1,5 +1,6 @@
 # BathSafe
 ## Introduction
+
 Bathing or showering in a bathroom with high temperature and humidity for a long time can lead to physical discomfort or even worse. This project mainly designed an online physical device to judge the safety of users in the bathroom by obtaining ambient temperature and humidity and capturing environmental actions. With these processed data, it can termly remind people who have been in the high-temperature and high-humidity bathroom for a long time, and send messages with detailed environment information and the alert reason to emergency contacts in case of emergency.
 
 ## Functions
@@ -7,9 +8,6 @@ Bathing or showering in a bathroom with high temperature and humidity for a long
 + Real-time monitor the environment data and remind those in high-temperature or high-humidity environment regularly.
 + Provide emergency button that is easy to reach, which can send a message to the emergency contacts.
 + Send emergency message automatically when there is no continuous activities in the bathroom or when the high temperature or high humidity lasted for too long.
-
-![image](https://github.com/ChenRuan/BathSafe/assets/145383140/f478f332-7233-4cfd-8706-afd688db9437)
-
 
 ## Materials Needed
 
@@ -39,8 +37,6 @@ Connect the hardware according to the Circuit Diagram. The connection between ea
 
 ![BathSafeSketch](https://github.com/ChenRuan/BathSafe/assets/145383140/ea6c965e-a232-4f7d-95b4-c231c4325566)
 
-
-
 ### Enclosure Design
 The packaging consists of six laser cut transparent plastic shell and one laser cut wooden board. 
 
@@ -50,7 +46,7 @@ The tenon structure of the plastic plate is made of MakerCase[1], and the bottom
 
 Multiple plastic sheets can be joined together to form a transparent box. To improve its water resistance and robustness, hot melt glue is used for pasting from board to board, and also used to fill the gaps between two exposed components and packaging.
 
-**!!! picture here !!!**
+![image](https://github.com/ChenRuan/BathSafe/assets/145383140/2822b8c4-d9af-43ba-80a2-a3806e970d71)
 
 The wooden board is planned on the location of each component, and drilled so that the wire can pass through, so as to achieve the effect of isolating the front and back circuits to better protect the main circuit. After all the components are linked and soldered, the wooden board is fixed into plastic boxes and hot-glued.
 
@@ -138,9 +134,7 @@ This module is used to acquire and process data, including temperature and humid
 
 ### Telegram Module
 
-Telegram模块主要参考这个网站，利用Telegram的机器人功能与订阅功能实现ESP8266与手机之间的信息交互。当需要发送紧急消息时，设备将会直接给特定的用户发送信息。信息的内容可以用以下函数自定义。 https://randomnerdtutorials.com/telegram-request-esp32-esp8266-nodemcu-sensor-readings/ 
-
-The Telegram module mainly refers to https://randomnerdtutorials.com/telegram-request-esp32-esp8266-nodemcu-sensor-readings/, and uses Telegram bots and subscription functions to realize information interaction between ESP8266 and mobile phones. When there is a need to send, the device will send the message directly to the specific user. The content of the message can be customized using the following function.
+The Telegram module mainly refers to [2]https://randomnerdtutorials.com/telegram-request-esp32-esp8266-nodemcu-sensor-readings/, and uses Telegram bots and subscription functions to realize information interaction between ESP8266 and mobile phones. When there is a need to send, the device will send the message directly to the specific user. The content of the message can be customized using the following function.
 ```
 void SendWarningMessage(int MessageMode){
   int numMinute = StartTime/60000;
@@ -206,9 +200,29 @@ The buzzer is mainly used to alert the user, including a reminder when the showe
 
 ## Instructions for Use
 
+将设备安装到墙上，打开开关即可开启装置。等待装置连接wifi，连接完毕后即可开始进行温湿度的安全监测。设备将在紧急情况下自动发送紧急消息，按压按钮也可以手动发送紧急消息。
+
 ## Application Demonstration
-电池问题！
-switch
+
+The device can be mounted on the bathroom wall.
+
+![8922ec5312ebe3afce2ef80c68dfd65](https://github.com/ChenRuan/BathSafe/assets/145383140/5da9253a-44cf-4453-abe1-ff45a5b805d0)
+
+![d94f3ea2763c5a948f784be0c97771d](https://github.com/ChenRuan/BathSafe/assets/145383140/655eb56d-9dac-4981-a522-286872433c07)
+
+When in a safe condition, the device should be displayed as shown below.
+
+![image](https://github.com/ChenRuan/BathSafe/assets/145383140/55aae1c4-c4f1-4ba4-8a03-7599710dff19)
+
+When the temperature is high or the humidity is high, the red light will light up.
+
+![image](https://github.com/ChenRuan/BathSafe/assets/145383140/98635cda-f435-49e3-bbbe-8a3d0fdb8fbb)
+
+If the application sends emergency messages, the Telegram app will receive like this.
+
+![image](https://github.com/ChenRuan/BathSafe/assets/145383140/f478f332-7233-4cfd-8706-afd688db9437)
+
 
 # References
 [1] MakerCase - https://en.makercase.com/
+[2] Telegram: Request ESP32/ESP8266 Sensor Readings (Arduino IDE) - https://randomnerdtutorials.com/telegram-request-esp32-esp8266-nodemcu-sensor-readings/
